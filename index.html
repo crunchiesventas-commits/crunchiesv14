@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRUNCHIES SNACKS V14 PRO</title>
+<meta name="theme-color" content="#ff6600">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>.bg-orange-brand{background:#ff6600}.text-orange-brand{color:#ff6600}.bg-cream{background:#fffaf5}html,body{overscroll-behavior-y:contain}</style>
+</head>
+<body class="bg-cream text-slate-800 font-sans min-h-screen pb-28">
+<header class="bg-white border-b border-orange-100 shadow-xs px-4 py-3 sticky top-0 z-40">
+<div class="max-w-7xl mx-auto flex justify-between items-center gap-2">
+<div class="flex items-center gap-2.5">
+<div class="bg-orange-brand text-white font-black px-3 py-1.5 rounded-xl text-base shadow-md">CS</div>
+<div><div class="flex items-center gap-1.5"><h1 class="text-sm md:text-xl font-black tracking-wide text-slate-900">CRUNCHIES SNACKS</h1><span class="bg-orange-brand text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">V14</span></div>
+<div class="flex items-center gap-1.5 mt-0.5"><span id="sync-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span><span id="sync-text" class="text-[10px] text-slate-400 font-medium">Sincronizado - Firebase</span></div></div></div></div></header>
+<div class="max-w-7xl mx-auto px-4 mt-3 sticky top-[62px] z-30 backdrop-blur-sm bg-cream/90 py-2">
+<nav class="flex items-center bg-white p-1.5 rounded-2xl border border-orange-100 shadow-xs gap-1">
+<button class="tab-btn flex-1 py-2 rounded-xl text-xs font-bold bg-orange-brand text-white">Ventas (<span id="count-ventas">0</span>)</button>
+<button class="tab-btn flex-1 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100">Producción</button>
+<button class="tab-btn flex-1 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100">Cobros (<span id="count-cobros">0</span>)</button>
+</nav></div>
+<main class="max-w-7xl mx-auto px-4 mt-4">
+<div class="bg-white p-4 rounded-3xl border border-orange-100 shadow-xs text-center space-y-3">
+<h2 class="font-black text-slate-800">CRUNCHIES SNACKS V14 PRO - Firebase Tiempo Real</h2>
+<p class="text-xs text-slate-500">Conectando a Firebase...</p>
+<p id="status" class="text-xs font-bold text-orange-600">Cargando 321 ventas, 67 clientes, 34 productos...</p>
+<div id="grid-ventas" class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 text-left"></div>
+</div>
+<div id="ticket-impresion" style="display:none"></div>
+</main>
+<button onclick="location.reload()" style="position:fixed;bottom:24px;right:24px;background:#ff6600;color:white;width:64px;height:64px;border-radius:50%;box-shadow:0 8px 24px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;font-size:28px;z-index:50">+</button>
+<script>
+const firebaseConfig = {apiKey:"AIzaSyADmUkB6l4sneFfQCvrFAyy5S-RyP70vk",authDomain:"crunchies-snacks.firebaseapp.com",projectId:"crunchies-snacks",storageBucket:"crunchies-snacks.appspot.com",messagingSenderId:"123456789",appId:"1:123456789:web:abc"};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+let globalVentas=[], globalClientes=[], globalProductos=[];
+db.collection('ventas').onSnapshot(snap=>{
+  let arr=[]; snap.forEach(doc=>{let d=doc.data(); arr.push({idVenta:d.idVenta||doc.id,numComprobante:d.numComprobante||0,idCliente:String(d.idCliente||''),fecha:d.fecha||'',total:parseFloat(d.total||0),saldoPendiente:parseFloat(d.saldoPendiente??d.total??0),estadoEntrega:d.estadoEntrega||'',clienteNombre:d.clienteNombre||'',items:d.items||[]})});
+  arr.sort((a,b)=>(parseInt(b.numComprobante)||0)-(parseInt(a.numComprobante)||0));
+  globalVentas=arr;
+  document.getElementById('count-ventas').textContent=arr.length;
+  document.getElementById('status').textContent=`Conectado: ${arr.length} ventas - Firebase tiempo real`;
+  let grid=document.getElementById('grid-ventas'); grid.innerHTML='';
+  arr.slice(0,20).forEach(v=>{
+    grid.innerHTML+=`<div class="bg-white p-3.5 rounded-3xl border border-orange-100 shadow-xs"><div class="flex justify-between"><span class="bg-orange-brand text-white text-[9px] font-black px-2 py-0.5 rounded">${v.fecha}</span><span class="text-base font-black">$${v.total.toFixed(2)}</span></div><h3 class="font-black text-xs mt-1">${v.clienteNombre||'Cliente '+v.idCliente}</h3><p class="text-[10px] text-slate-500">${v.fecha} • ${v.numComprobante} • ${v.items.length} items</p></div>`;
+  });
+});
+db.collection('clientes').onSnapshot(snap=>{
+  let arr=[]; snap.forEach(d=>arr.push(d.data()));
+  document.getElementById('count-cobros').textContent=arr.filter(c=>true).length;
+});
+document.getElementById('sync-text').textContent='Sincronizado Firebase';
+</script>
+</body>
+</html>
